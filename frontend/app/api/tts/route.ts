@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const RAILS_API_URL = process.env.RAILS_API_URL || "http://localhost:3000"
+const RAILS_API_URL = process.env.NEXT_PUBLIC_RAILS_API_URL ||
+                      process.env.RAILS_API_URL ||
+                      "http://localhost:3000"
 const MAX_POLL_ATTEMPTS = 30
 const POLL_INTERVAL_MS = 1000
 
