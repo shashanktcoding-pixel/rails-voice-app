@@ -39,6 +39,9 @@ group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ]
   gem "dotenv-rails"
+  gem "rspec-rails", "~> 7.1"
+  gem "factory_bot_rails", "~> 6.5"
+  gem "webmock", "~> 3.26"
 end
 
 group :development do
@@ -52,11 +55,5 @@ gem "sidekiq", "~> 8.0"
 gem "rack-attack", "~> 6.8"
 
 gem "redis", "~> 5.4"
-
-gem "rspec-rails", "~> 7.1"
-
-gem "factory_bot_rails", "~> 6.5"
-
-gem "webmock", "~> 3.26"
 
 gem "httparty", "~> 0.22"
