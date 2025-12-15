@@ -65,8 +65,8 @@ export async function POST(req: NextRequest) {
     const audioUrl = await pollForAudio(createData.id)
     console.log("[v0] Audio ready at:", audioUrl)
 
-    // Step 3: Fetch the audio file
-    const audioResponse = await fetch(`${RAILS_API_URL}${audioUrl}`)
+    // Step 3: Fetch the audio file (audioUrl is already a complete Supabase URL)
+    const audioResponse = await fetch(audioUrl)
 
     if (!audioResponse.ok) {
       throw new Error("Failed to fetch audio file")
