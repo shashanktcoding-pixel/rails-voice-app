@@ -32,7 +32,7 @@ RSpec.describe "Voices API", type: :request do
       it "enqueues a VoiceGenerationJob" do
         expect {
           post "/generate_voice", params: valid_params
-        }.to have_enqueued_job(VoiceGenerationJob)
+        }.to change(VoiceGenerationJob.jobs, :size).by(1)
       end
 
       it "returns correct status URL format" do
