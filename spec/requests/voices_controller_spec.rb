@@ -8,17 +8,17 @@ RSpec.describe "Voices API", type: :request do
     context "with valid parameters" do
       it "creates a new voice generation" do
         expect {
-          post "/generate_voice", params: valid_params
+          post "/generate_voice", params: valid_params, headers: auth_headers
         }.to change(VoiceGeneration, :count).by(1)
       end
 
       it "returns status 202 accepted" do
-        post "/generate_voice", params: valid_params
+        post "/generate_voice", params: valid_params, headers: auth_headers
         expect(response).to have_http_status(:accepted)
       end
 
       it "returns voice generation details" do
-        post "/generate_voice", params: valid_params
+        post "/generate_voice", params: valid_params, headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(json_response).to have_key("id")
@@ -31,12 +31,12 @@ RSpec.describe "Voices API", type: :request do
 
       it "enqueues a VoiceGenerationJob" do
         expect {
-          post "/generate_voice", params: valid_params
+          post "/generate_voice", params: valid_params, headers: auth_headers
         }.to change(VoiceGenerationJob.jobs, :size).by(1)
       end
 
       it "returns correct status URL format" do
-        post "/generate_voice", params: valid_params
+        post "/generate_voice", params: valid_params, headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(json_response["status_url"]).to match(/\/voice_status\/\d+/)
@@ -46,17 +46,17 @@ RSpec.describe "Voices API", type: :request do
     context "with invalid parameters" do
       it "does not create a voice generation" do
         expect {
-          post "/generate_voice", params: invalid_params
+          post "/generate_voice", params: invalid_params, headers: auth_headers
         }.not_to change(VoiceGeneration, :count)
       end
 
       it "returns status 422 unprocessable entity" do
-        post "/generate_voice", params: invalid_params
+        post "/generate_voice", params: invalid_params, headers: auth_headers
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it "returns error messages" do
-        post "/generate_voice", params: invalid_params
+        post "/generate_voice", params: invalid_params, headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(json_response).to have_key("errors")
@@ -67,7 +67,7 @@ RSpec.describe "Voices API", type: :request do
 
     context "without text parameter" do
       it "returns unprocessable entity status" do
-        post "/generate_voice", params: {}
+        post "/generate_voice", params: {}, headers: auth_headers
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -75,13 +75,13 @@ RSpec.describe "Voices API", type: :request do
 
   describe "GET /voice_status/:id" do
     context "when voice generation exists" do
-      let!(:pending_generation) { create(:voice_generation, status: 'pending') }
-      let!(:processing_generation) { create(:voice_generation, :processing) }
-      let!(:completed_generation) { create(:voice_generation, :completed) }
-      let!(:failed_generation) { create(:voice_generation, :failed) }
+      let!(:pending_generation) { create(:voice_generation, status: 'pending', supabase_user_id: test_user_id) }
+      let!(:processing_generation) { create(:voice_generation, :processing, supabase_user_id: test_user_id) }
+      let!(:completed_generation) { create(:voice_generation, :completed, supabase_user_id: test_user_id) }
+      let!(:failed_generation) { create(:voice_generation, :failed, supabase_user_id: test_user_id) }
 
       it "returns pending status for pending generation" do
-        get "/voice_status/#{pending_generation.id}"
+        get "/voice_status/#{pending_generation.id}", headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(response).to have_http_status(:ok)
@@ -93,7 +93,7 @@ RSpec.describe "Voices API", type: :request do
       end
 
       it "returns processing status for processing generation" do
-        get "/voice_status/#{processing_generation.id}"
+        get "/voice_status/#{processing_generation.id}", headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(response).to have_http_status(:ok)
@@ -103,7 +103,7 @@ RSpec.describe "Voices API", type: :request do
       end
 
       it "returns completed status with audio URL" do
-        get "/voice_status/#{completed_generation.id}"
+        get "/voice_status/#{completed_generation.id}", headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(response).to have_http_status(:ok)
@@ -113,7 +113,7 @@ RSpec.describe "Voices API", type: :request do
       end
 
       it "returns failed status with error message" do
-        get "/voice_status/#{failed_generation.id}"
+        get "/voice_status/#{failed_generation.id}", headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(response).to have_http_status(:ok)
@@ -125,12 +125,12 @@ RSpec.describe "Voices API", type: :request do
 
     context "when voice generation does not exist" do
       it "returns 404 not found" do
-        get "/voice_status/99999"
+        get "/voice_status/99999", headers: auth_headers
         expect(response).to have_http_status(:not_found)
       end
 
       it "returns error message" do
-        get "/voice_status/99999"
+        get "/voice_status/99999", headers: auth_headers
         json_response = JSON.parse(response.body)
 
         expect(json_response).to have_key("error")
