@@ -281,14 +281,7 @@ export default function TextToSpeechPage() {
                       >
                         <Download className="size-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(item.id)}
-                        className="hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+
                     </div>
                   </CardContent>
                 </Card>
