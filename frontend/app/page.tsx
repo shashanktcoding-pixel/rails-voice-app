@@ -180,7 +180,7 @@ export default function TextToSpeechPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-12">
             <div className="text-center sm:text-left">
                 <h1 className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
@@ -196,18 +196,18 @@ export default function TextToSpeechPage() {
         </div>
 
 
-        <Card className="mb-16 border bg-card/60 shadow-lg backdrop-blur-sm">
+        <Card className="mb-12 border-border/50 bg-card/50 backdrop-blur">
           <CardContent className="space-y-6 p-8">
             <div className="space-y-3">
-              <label className="flex items-center gap-3 text-lg font-medium text-foreground">
-                <Mic className="size-5 text-primary" />
+              <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Mic className="size-4 text-primary" />
                 Enter Your Text
               </label>
               <Textarea
-                placeholder="Type or paste your text here... The longer the text, the longer the generation time."
+                placeholder="Type or paste your text here..."
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                className="min-h-40 resize-none rounded-md border-border/50 bg-background/50 text-base leading-relaxed shadow-inner focus:ring-2 focus:ring-primary/50"
+                className="min-h-40 resize-none border-border/50 bg-background/50 text-base leading-relaxed"
                 disabled={isGenerating}
               />
             </div>
@@ -225,7 +225,7 @@ export default function TextToSpeechPage() {
                 onClick={handleGenerate}
                 disabled={isGenerating || !text.trim()}
                 size="lg"
-                className="font-medium shadow-md transition-all hover:shadow-lg active:scale-95"
+                className="bg-primary font-medium text-primary-foreground hover:bg-primary/90"
               >
                 {isGenerating ? (
                   <>
@@ -241,45 +241,27 @@ export default function TextToSpeechPage() {
         </Card>
 
         <div>
-          <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">Your Generated Audio</h2>
+          <h2 className="mb-6 text-2xl font-semibold text-foreground">Audio History</h2>
 
-          {loadingHistory ? (
-             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[...Array(3)].map((_, i) => (
-                    <Card key={i} className="rounded-lg border bg-card shadow-sm">
-                        <CardContent className="flex animate-pulse items-center gap-4 p-5">
-                            <div className="h-10 w-10 rounded-md bg-muted/50"></div>
-                            <div className="flex-1 space-y-2">
-                                <div className="h-4 rounded-md bg-muted/50"></div>
-                                <div className="h-3 w-3/4 rounded-md bg-muted/50"></div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-             </div>
-          ) : audioHistory.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {audioHistory.length > 0 ? (
+            <div className="space-y-3">
               {audioHistory.map((item) => (
                 <Card
                   key={item.id}
-                  className={cn(
-                    "group flex flex-col justify-between rounded-xl border border-border/50 bg-card/90 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
-                    currentPlaying === item.id && "ring-2 ring-primary"
-                  )}
+                  className="border-border/50 bg-card/50 backdrop-blur transition-colors hover:bg-card/70"
                 >
-                  <CardContent className="flex items-start gap-4 p-5 cursor-pointer" onClick={() => handlePlay(item.id, item.audioUrl)}>
-                    <div className="shrink-0 pt-1">
-                      <div className={cn("flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all",
-                        currentPlaying === item.id
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-primary/20 bg-primary/5 text-primary/80 group-hover:bg-primary/10 group-hover:text-primary"
-                      )}>
-                        {currentPlaying === item.id ? <Pause className="size-5" /> : <Play className="size-5" />}
-                      </div>
-                    </div>
+                  <CardContent className="flex items-center gap-4 p-5">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handlePlay(item.id, item.audioUrl)}
+                      className="shrink-0 border-primary/30 bg-primary/10 hover:bg-primary/20 hover:text-primary"
+                    >
+                      {currentPlaying === item.id ? <Pause className="size-4" /> : <Play className="size-4" />}
+                    </Button>
 
                     <div className="min-w-0 flex-1">
-                      <p className="mb-1.5 line-clamp-3 text-sm font-medium leading-snug text-foreground">{item.text}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{item.text}</p>
                       <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>
                     </div>
 
@@ -289,40 +271,33 @@ export default function TextToSpeechPage() {
                       onEnded={() => setCurrentPlaying(null)}
                       className="hidden"
                     />
-                  </CardContent>
-                  <div className="flex items-center justify-end gap-1 border-t bg-card/50 px-3 py-2">
+
+                    <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => { e.stopPropagation(); handleDownload(item.audioUrl, item.text)}}
-                        className="text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                        aria-label="Download"
+                        onClick={() => handleDownload(item.audioUrl, item.text)}
+                        className="hover:bg-primary/10 hover:text-primary"
                       >
                         <Download className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(item.id)}}
-                        className="text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                        aria-label="Delete"
+                        onClick={() => handleDelete(item.id)}
+                        className="hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="size-4" />
                       </Button>
                     </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <Card className="rounded-lg border-2 border-dashed border-border/50 bg-transparent shadow-none backdrop-blur-none">
-              <CardContent className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-                <div className="rounded-full border border-border/50 bg-card/50 p-4">
-                    <Mic className="size-8 text-muted-foreground" />
-                </div>
-                <div className="space-y-1">
-                    <h3 className="font-semibold text-foreground">No Audio Generated</h3>
-                    <p className="text-sm text-muted-foreground">Your generated audio files will appear here.</p>
-                </div>
+            <Card className="border-border/50 bg-card/30 backdrop-blur">
+              <CardContent className="py-16 text-center">
+                <p className="text-muted-foreground">No audio files yet. Generate your first speech above!</p>
               </CardContent>
             </Card>
           )}
