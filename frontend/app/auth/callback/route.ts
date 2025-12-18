@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
+
+  // Use the production site URL or fall back to request headers
+  const origin = process.env.NEXT_PUBLIC_SITE_URL ||
+                 `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}`
 
   if (code) {
     const cookieStore = await cookies()
