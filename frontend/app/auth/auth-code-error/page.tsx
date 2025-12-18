@@ -11,11 +11,9 @@ export default function AuthErrorPage() {
                     <p className="text-gray-600 dark:text-gray-400 mb-8">
                         There was a problem authenticating your account. Please try again.
                     </p>
-                    <Link href="/login">
-                        <a className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200">
-                            Back to Login
-                        </a>
-                    </p>
+                    <Link href="/login" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 inline-block">
+                        Back to Login
+                    </Link>
                 </div>
             </div>
         </div>
