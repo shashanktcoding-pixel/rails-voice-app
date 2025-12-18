@@ -66,7 +66,7 @@ RSpec.describe SupabaseStorageService do
     context 'when upload fails' do
       before do
         stub_request(:post, upload_url)
-          .to_return(status: 400, body: '{"error": "Invalid file"}')
+          .to_return(status: 400, body: '{"error": "Invalid file"}', headers: { 'Content-Type' => 'application/json' })
       end
 
       it 'raises an error' do
