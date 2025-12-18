@@ -4,8 +4,10 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
-import { Loader2, Play, Pause, Download, Trash2, Mic } from "lucide-react"
+import { Loader2, Play, Pause, Download, Trash2, Mic, LogOut, ArrowRight, LogIn } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/contexts/AuthContext"
+import Link from "next/link"
 
 interface AudioFile {
   id: string
@@ -15,6 +17,7 @@ interface AudioFile {
 }
 
 export default function TextToSpeechPage() {
+  const { user, loading, signOut } = useAuth()
   const [text, setText] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
   const [status, setStatus] = useState("")
@@ -68,7 +71,8 @@ export default function TextToSpeechPage() {
       setCurrentPlaying(null)
       const audio = document.getElementById(`audio-${id}`) as HTMLAudioElement
       audio?.pause()
-    } else {
+    }
+    else {
       audioHistory.forEach((item) => {
         const audio = document.getElementById(`audio-${item.id}`) as HTMLAudioElement
         audio?.pause()
@@ -94,18 +98,58 @@ export default function TextToSpeechPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-background">
+        <div className="mx-auto max-w-4xl px-4 py-24 sm:px-6 lg:px-8 text-center flex flex-col items-center">
+            <h1 className="mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-6xl font-bold tracking-tight text-transparent text-balance sm:text-7xl">
+              Welcome to AI Voice Generation
+            </h1>
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed mb-12">
+              The most accurate, realistic, and cost-effective text-to-speech APIs. Sign up to start generating high-quality audio.
+            </p>
+            <div className="flex gap-4">
+              <Link href="/signup" passHref>
+                <Button size="lg" className="font-medium">
+                  Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href="/login" passHref>
+                <Button size="lg" variant="outline" className="font-medium">
+                  <LogIn className="mr-2 h-4 w-4" /> Log In
+                </Button>
+              </Link>
+            </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-16 text-center">
-          <h1 className="mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-6xl font-bold tracking-tight text-transparent text-balance sm:text-7xl">
-            Text to Speech
-          </h1>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            Build with the most accurate, realistic, and cost-effective APIs for text-to-speech. Trusted by developers
-            and leading enterprises.
-          </p>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-12">
+            <div className="text-center sm:text-left">
+                <h1 className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-5xl font-bold tracking-tight text-transparent sm:text-6xl">
+                    Text to Speech
+                </h1>
+                <p className="mt-2 text-lg text-muted-foreground">
+                    Welcome, {user.email}
+                </p>
+            </div>
+            <Button onClick={signOut} variant="outline" className="w-full sm:w-auto">
+                <LogOut className="mr-2 h-4 w-4" /> Sign Out
+            </Button>
         </div>
+
 
         <Card className="mb-12 border-border/50 bg-card/50 backdrop-blur">
           <CardContent className="space-y-6 p-8">

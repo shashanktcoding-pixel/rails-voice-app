@@ -20,7 +20,9 @@ class VoiceGenerationJob
       audio_file_path: audio_url
     )
   rescue StandardError => e
-    voice_generation.update(
+    # Re-fetch to ensure we have the record even if initial find failed
+    vg = VoiceGeneration.find_by(id: voice_generation_id)
+    vg&.update(
       status: 'failed',
       error_message: e.message
     )
