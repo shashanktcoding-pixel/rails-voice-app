@@ -60,4 +60,4 @@ ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-CMD ["sh", "-c", "bundle exec rake db:migrate && bundle exec puma -C config/puma.rb"]
+CMD ["sh", "-c", "rm -f tmp/cache/bootsnap-*.msgpack && bundle exec rake db:migrate && bundle exec puma -C config/puma.rb"]
