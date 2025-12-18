@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
@@ -8,12 +8,15 @@ import { Loader2, Play, Pause, Download, Trash2, Mic, LogOut, ArrowRight, LogIn 
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 
 interface AudioFile {
-  id: string
+  id: number
   text: string
   audioUrl: string
-  timestamp: number
+  status: string
+  created_at: string
+  updated_at: string
 }
 
 export default function TextToSpeechPage() {
@@ -22,7 +25,49 @@ export default function TextToSpeechPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [status, setStatus] = useState("")
   const [audioHistory, setAudioHistory] = useState<AudioFile[]>([])
-  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null)
+  const [currentPlaying, setCurrentPlaying] = useState<number | null>(null)
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const supabase = createClient()
+
+  // Fetch user's voice history
+  const fetchHistory = async () => {
+    if (!user) return
+
+    setLoadingHistory(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+
+      const response = await fetch("/api/voices", {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (response.ok) {
+        const voices = await response.json()
+        const mappedVoices: AudioFile[] = voices
+          .filter((v: any) => v.status === 'completed')
+          .map((v: any) => ({
+            id: v.id,
+            text: v.text,
+            audioUrl: v.audio_url,
+            status: v.status,
+            created_at: v.created_at,
+            updated_at: v.updated_at
+          }))
+        setAudioHistory(mappedVoices)
+      }
+    } catch (error) {
+      console.error("Failed to fetch history:", error)
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchHistory()
+  }, [user])
 
   const handleGenerate = async () => {
     if (!text.trim()) {
@@ -34,10 +79,16 @@ export default function TextToSpeechPage() {
     setStatus("Generating speech...")
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error("Not authenticated")
+      }
+
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${session.access_token}`
         },
         body: JSON.stringify({ text }),
       })
@@ -46,19 +97,11 @@ export default function TextToSpeechPage() {
         throw new Error("Failed to generate speech")
       }
 
-      const blob = await response.blob()
-      const audioUrl = URL.createObjectURL(blob)
-
-      const newAudio: AudioFile = {
-        id: Date.now().toString(),
-        text: text.substring(0, 50) + (text.length > 50 ? "..." : ""),
-        audioUrl,
-        timestamp: Date.now(),
-      }
-
-      setAudioHistory([newAudio, ...audioHistory])
       setStatus("Speech generated successfully!")
       setText("")
+
+      // Refetch history to show the new generation
+      await fetchHistory()
     } catch (error) {
       setStatus(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
@@ -66,7 +109,7 @@ export default function TextToSpeechPage() {
     }
   }
 
-  const handlePlay = (id: string, audioUrl: string) => {
+  const handlePlay = (id: number, audioUrl: string) => {
     if (currentPlaying === id) {
       setCurrentPlaying(null)
       const audio = document.getElementById(`audio-${id}`) as HTMLAudioElement
@@ -87,11 +130,13 @@ export default function TextToSpeechPage() {
   const handleDownload = (audioUrl: string, text: string) => {
     const a = document.createElement("a")
     a.href = audioUrl
-    a.download = `tts-${Date.now()}.mp3`
+    a.download = `tts-${text.substring(0, 20).replace(/\s+/g, '-')}-${Date.now()}.mp3`
     a.click()
   }
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: number) => {
+    // For now, just remove from local state
+    // TODO: Add delete endpoint to backend
     setAudioHistory(audioHistory.filter((item) => item.id !== id))
     if (currentPlaying === id) {
       setCurrentPlaying(null)
@@ -217,7 +262,7 @@ export default function TextToSpeechPage() {
 
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">{item.text}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(item.timestamp).toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</p>
                     </div>
 
                     <audio

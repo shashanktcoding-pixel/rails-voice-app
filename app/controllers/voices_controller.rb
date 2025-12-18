@@ -1,6 +1,26 @@
 class VoicesController < ApplicationController
+  def index
+    voice_generations = VoiceGeneration
+      .where(supabase_user_id: current_user_id)
+      .order(created_at: :desc)
+
+    render json: voice_generations.map { |vg|
+      {
+        id: vg.id,
+        text: vg.text,
+        status: vg.status,
+        audio_url: vg.audio_url,
+        created_at: vg.created_at,
+        updated_at: vg.updated_at
+      }
+    }
+  end
+
   def generate
-    voice_generation = VoiceGeneration.new(text: params[:text])
+    voice_generation = VoiceGeneration.new(
+      text: params[:text],
+      supabase_user_id: current_user_id
+    )
 
     if voice_generation.save
       VoiceGenerationJob.perform_async(voice_generation.id)
@@ -19,7 +39,11 @@ class VoicesController < ApplicationController
   end
 
   def status
-    voice_generation = VoiceGeneration.find(params[:id])
+    # Only allow users to check status of their own voice generations
+    voice_generation = VoiceGeneration.find_by!(
+      id: params[:id],
+      supabase_user_id: current_user_id
+    )
 
     response_data = {
       id: voice_generation.id,

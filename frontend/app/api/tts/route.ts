@@ -6,9 +6,13 @@ const RAILS_API_URL = process.env.NEXT_PUBLIC_RAILS_API_URL ||
 const MAX_POLL_ATTEMPTS = 30
 const POLL_INTERVAL_MS = 1000
 
-async function pollForAudio(jobId: number): Promise<string> {
+async function pollForAudio(jobId: number, authToken: string): Promise<string> {
   for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
-    const statusResponse = await fetch(`${RAILS_API_URL}/voice_status/${jobId}`)
+    const statusResponse = await fetch(`${RAILS_API_URL}/voice_status/${jobId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    })
 
     if (!statusResponse.ok) {
       throw new Error(`Status check failed: ${statusResponse.statusText}`)
@@ -33,6 +37,11 @@ async function pollForAudio(jobId: number): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const { text } = await req.json()
+    const authToken = req.headers.get('Authorization')?.split(' ')[1]
+
+    if (!authToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     if (!text) {
       return NextResponse.json({ error: "Text is required" }, { status: 400 })
@@ -45,6 +54,7 @@ export async function POST(req: NextRequest) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${authToken}`
       },
       body: JSON.stringify({ text }),
     })
@@ -62,7 +72,7 @@ export async function POST(req: NextRequest) {
     console.log("[v0] Job created with ID:", createData.id)
 
     // Step 2: Poll until audio is ready
-    const audioUrl = await pollForAudio(createData.id)
+    const audioUrl = await pollForAudio(createData.id, authToken)
     console.log("[v0] Audio ready at:", audioUrl)
 
     // Step 3: Fetch the audio file (audioUrl is already a complete Supabase URL)

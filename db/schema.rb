@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_12_11_062240) do
+ActiveRecord::Schema[7.1].define(version: 2025_12_18_115717) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -35,6 +35,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_12_11_062240) do
     t.text "error_message"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "supabase_user_id"
+    t.index ["supabase_user_id"], name: "index_voice_generations_on_supabase_user_id"
   end
 
 end
